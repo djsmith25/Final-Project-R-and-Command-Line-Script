@@ -1,0 +1,54 @@
+# FINAL PROJECT COMMAND LINE SCRIPT
+
+# Create multi-fasta files from single fasta files once aligned
+
+# For Columbia River crayfish
+cat Columbia_River*.fa > Columbia_River_data.fa
+
+# For Corvallis Stream crayfish
+cat Corvallis*.fa > Corvallis_Stream.fa
+
+# For Milton Creek crayfish
+cat Milton*.fa > Milton_Creek.fa
+
+# For North Fork Clackamas and Willamette River crayfish merged into solely Willamette River crayfish
+cat North_Fork_Clackamas_River_1.fa North_Fork_Clackamas_River_2.fa North_Fork_Clackamas_River_3.fa North_Fork_Clackamas_River_4.fa North_Fork_Clackamas_River_5.fa North_Fork_Clackamas_River_6.fa Willamette_River_1.fa Willamette_River_2.fa Willamette_River_3.fa Willamette_River_4.fa Willamette_River_5.fa > Willamette_River.fa
+
+# Transfer fasta files into working directory
+scp -r /Users/danieljsmith/Desktop/FISH694_Final_Project djsmith25@chinook04.alaska.edu:/center1/FISH694/djsmith25
+
+# Log into Chinook (HPC) and activate the muscle conda environment
+conda activate muscle
+
+# Move into my center1 working directory
+cd /center1/FISH694/djsmith25
+
+# Navigate to the FISH694_Final_Project directory
+cd FISH694_Final_Project
+
+# Use muscle to align the sequences for each site. The input in the multi-fasta file and the output is the aligned multi-fasta file.
+# For Columbia River
+muscle -align Columbia_River_data.fa -output Columbia_River_data.afa
+# For Willamette River
+muscle -align Willamette_River.fa -output Willamette_River.afa
+# For Corvallis Stream
+muscle -align Corvallis_Stream.fa -output Corvallis_Stream.afa
+# For Milton Creek
+muscle -align Milton_Creek.fa -output Milton_Creek.afa
+
+# Use nano to view the aligned sequences for each site
+nano
+
+# Transfer sequence data back to local server for use in the pipeline through R
+scp -r djsmith25@chinook04.alaska.edu:/center1/FISH694/djsmith25/FISH694_Final_Project /Users/danieljsmith/Desktop
+
+# Merge Multifasta files to perform alignments for among group pairwise sequnce comparisons
+cat Corvallis_Stream.fa Columbia_River_data.fa > Corvallis_Columbia.fa
+cat Corvallis_Stream.fa Milton_Creek.fa > Corvallis_Milton.fa
+cat Corvallis_Stream.fa Willamette_River.fa > Corvallis_Willamette.fa
+cat Columbia_River_data.fa Milton_Creek.fa > Columbia_Milton.fa
+cat Columbia_River_data.fa Willamette_River.fa > Columbia_Willamette.fa
+cat Milton_Creek.fa Willamette_River.fa > Milton_Willamette.fa
+
+# Transfer sequence data back to local server for use in the pipeline through R
+scp -r djsmith25@chinook04.alaska.edu:/center1/FISH694/djsmith25/FISH694_Final_Project /Users/danieljsmith/Desktop
