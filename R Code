@@ -1,0 +1,235 @@
+## Following the Population Differentiation for Sequence Data in R tutorial ##
+
+# Install packages to be used for downstream analyses
+install.packages("apex")
+install.packages("adegenet")
+install.packages("pegas")
+install.packages("mmod")
+install.packages("poppr")
+
+# Call the following packages
+library("apex")
+library("adegenet")
+library("pegas")
+library("mmod")
+library("poppr")
+
+# Read in the multiple aligned multifasta files for each site (locus)
+crayfish_data <- read.multiFASTA(dir(pattern = "Fasta", full.names = TRUE))
+
+# View the data
+crayfish_data
+
+# View the locus names
+getLocusNames(crayfish_data)
+
+# Set the locus names to be without the .txt ending
+(setLocusNames(crayfish_data) <- gsub(".txt", "", getLocusNames(crayfish_data)))
+
+# Create the "genind" object for crayfish_data
+crayfish_data_gid <- multidna2genind(crayfish_data, mlst = TRUE)
+
+# View the "genind" object
+crayfish_data_gid
+
+# Create a sites vector for the four loci to be used in the population strata
+sites_vector <- c("Columbia River", "Corvallis Stream", "Milton Creek", "Willamette River")
+
+# Create a strata data frame for the four river sites
+crayfish_strata <- data.frame(rivers = rep(sites_vector, times = c(21, 14, 28, 11)))
+
+# Set the population strata for the "genind" object
+strata(crayfish_data_gid) <- crayfish_strata
+
+# Set the populations for the "genind" object
+setPop(crayfish_data_gid) <- ~rivers
+
+# Now view the "genind" object
+crayfish_data_gid
+
+# The population and strata are now there in the optional content
+
+# Calculate Nei's pairwise Gst (Fst) value in between populations
+
+pairwise_Gst_Nei(crayfish_data_gid, linearized = FALSE)
+
+# Calculate Hedrick's pairwise Gst (Fst) value between populations
+pairwise_Gst_Hedrick(crayfish_data_gid, linearized = FALSE)
+
+## Following the Inferring evolutionary processes from sequence data in R tutorial ##
+
+# Install packages used for this pipeline
+install.packages("ape")
+install.packages("pegas")
+
+# Load libraries
+library(tidyverse)
+library(ape)
+library(pegas)
+
+# View the multisequence FASTA files for each site
+file.show("Columbia_River_Fasta_Multisequence.txt")
+file.show("Corvallis_Stream_Fasta_Multisequence.txt")
+file.show("Milton_Creek_Fasta_Multisequence.txt")
+file.show("Willamette_River_Fasta_Multisequence.txt")
+
+# Read in and view each multisequence FASTA file
+Columbia_River_seq <- read.dna("Columbia_River_Fasta_Multisequence.txt", format = "fasta")
+Columbia_River_seq
+Corvallis_Stream_seq <- read.dna("Corvallis_Stream_Fasta_Multisequence.txt", format = "fasta")
+Corvallis_Stream_seq
+Milton_Creek_seq <- read.dna("Milton_Creek_Fasta_Multisequence.txt", format = "fasta")
+Milton_Creek_seq
+Willamette_River_seq <- read.dna("Willamette_River_Fasta_Multisequence.txt", format = "fasta")
+Willamette_River_seq
+
+# Convert to an alignment
+# For Columbia River
+Columbia_River_align <- as.alignment(Columbia_River_seq)
+Columbia_River_align
+# For Corvallis Stream
+Corvallis_Stream_align <- as.alignment(Corvallis_Stream_seq)
+Corvallis_Stream_align
+# For Milton Creek
+Milton_Creek_align <- as.alignment(Milton_Creek_seq)
+Milton_Creek_align
+# For Willamette River
+Willamette_River_align <- as.alignment(Willamette_River_seq)
+Willamette_River_align
+
+# View the sequences from the alignment
+Columbia_River_align$seq
+Corvallis_Stream_align$seq
+Milton_Creek_align$seq
+Willamette_River_align$seq
+
+# Use alview to identify nucleotide polymorphisms in the sequences
+# For Columbia River
+alview(Columbia_River_seq)
+# For Corvallis Stream
+alview(Corvallis_Stream_seq)
+# For Milton Creek
+alview(Milton_Creek_seq)
+# For Willamette River
+alview(Willamette_River_seq)
+
+# Identify base frequencies for all sequences
+base.freq(Columbia_River_seq)
+base.freq(Corvallis_Stream_seq)
+base.freq(Milton_Creek_seq)
+base.freq(Willamette_River_seq)
+
+# Identify GC content for all sequences
+GC.content(Columbia_River_seq)
+GC.content(Corvallis_Stream_seq)
+GC.content(Milton_Creek_seq)
+GC.content(Willamette_River_seq)
+
+# Identify indices where polymorphisms occur
+Col_Riv_seg <- seg.sites(Columbia_River_seq)
+Corv_Str_seg <- seg.sites(Corvallis_Stream_seq)
+Milton_Creek_seg <- seg.sites(Milton_Creek_seq)
+Will_Riv_seg <- seg.sites(Willamette_River_seq)
+
+# Count the number of polymorphism sites
+Col_Riv_seg_num <- length(Col_Riv_seg) # 18 sites
+Corv_Str_seg_num <- length(Corv_Str_seg) # 8 sites
+Milton_Creek_seg_num <- length(Milton_Creek_seg) # 2 sites
+Will_Riv_seg_num <- length(Will_Riv_seg) # 10 sites
+
+# Standardize segrating sites to the length of sequences
+# For Columbia River
+Col_Riv_seq_length <- 441
+Col_Riv_stand <- Col_Riv_seg_num/Col_Riv_seq_length #0.04081633
+
+# For Corvallis Stream
+Corv_Str_seq_length <- 438
+Corv_Str_stand <- Corv_Str_seg_num/Corv_Str_seq_length #0.01826484
+# For Milton Creek
+Milton_Creek_seq_length <- 438
+Milton_Creek_stand <- Milton_Creek_seg_num/Milton_Creek_seq_length # 0.00456621
+# For Willamette River
+Will_Riv_seq_length <- 438
+Will_Riv_stand <- Will_Riv_seg_num/Will_Riv_seq_length # 0.02283105
+
+# Calculate nucleotide diversity within sites (already standardized)
+nuc.div(Columbia_River_seq) # 0.007279067
+nuc.div(Corvallis_Stream_seq) # 0.002891845
+nuc.div(Milton_Creek_seq) # 0.0005811631
+nuc.div(Willamette_River_seq) # 0.009819014
+
+
+# Read in and view the multisequence FASTA files for among site comparisons
+Columbia_Milton_seq <- read.dna("Columbia_Milton_Multisequence.txt", format = "fasta")
+Columbia_Milton_seq
+
+Corvallis_Columbia_seq <- read.dna("Columbia_Corvallis_Multisequence.txt", format = "fasta")
+
+Columbia_Willamette_seq <- read.dna("Columbia_Willamette_Multisequence.txt", format = "fasta")
+
+Corvallis_Milton_seq <- read.dna("Corvallis_Milton_Multisequence.txt", format = "fasta")
+
+Corvallis_Willamette_seq <- read.dna("Corvallis_Willamette_Multisequence.txt", format = "fasta")
+
+Milton_Willamette_seq <- read.dna("Milton_Willamette_Multisequence.txt", format = "fasta")
+
+# Identify location and number of segregating sites and calculate nucleotide diversity for among group comparisons
+Col_Milton_seg <- seg.sites(Columbia_Milton_seq)
+Col_Milton_seg_num <- length(Col_Milton_seg) # 20
+nuc.div(Columbia_Milton_seq) # 0.005518455
+
+Corv_Col_seg <- seg.sites(Corvallis_Columbia_seq)
+Corv_Col_seg_num <- length(Corv_Col_seg) # 23
+nuc.div(Corvallis_Columbia_seq) # 0.01116474
+
+Col_Will_seg <- seg.sites(Columbia_Willamette_seq)
+Col_Will_seg_num <- length(Col_Will_seg) # 24
+nuc.div(Columbia_Willamette_seq) # 0.009568539
+
+Corv_Milton_seg <- seg.sites(Corvallis_Milton_seq)
+Corv_Milton_seg_num <- length(Corv_Milton_seg) # 10
+nuc.div(Corvallis_Milton_seq) # 0.00853406
+
+Corv_Will_seg <- seg.sites(Corvallis_Willamette_seq)
+Corv_Will_seg_num <- length(Corv_Will_seg) # 11
+nuc.div(Corvallis_Willamette_seq) # 0.007795576
+
+Milton_Will_seg <- seg.sites(Milton_Willamette_seq)
+Milton_Will_seg_num <- length(Milton_Will_seg) # 11
+nuc.div(Milton_Willamette_seq) # 0.005336347
+
+## Following the Creating haplotype networks with R - Farré lab tutorial and Plotting Haplotype Networks with pegas help page in Cran ##
+
+# Read in the FASTA file for all sequences
+all_sequences <- read.dna("All_Sequences.txt", format = "fasta")
+
+# Create a population site vector
+population_vector <- c("Columbia River", "Corvallis Stream", "Milton Creek", "Willamette River")
+
+# Create another vector to be used for computing the frequencies of haplotypes for each population
+populations <- rep(population_vector, times = c(21, 14, 28, 11))
+table(populations)
+
+# Create haplotypes for sequence data
+all_sequences_haplo <- haplotype(all_sequences)
+all_sequences_haplo
+
+# View the haplotype summary
+sz <- summary(all_sequences_haplo)
+
+# Compute the frequencies of haplotypes for each population.
+pop <- haploFreq(all_sequences, fac = populations, haplo = all_sequences_haplo)
+
+# Sort haplotype labels
+all_sequences_haplo <- sort(all_sequences_haplo, what = "labels")
+
+# Create haplotype network from sorted haplotypes
+all_sequences_network <- haploNet(all_sequences_haplo)
+# Extract haplotype network labels
+all_sequences_network_labels <- attr(all_sequences_network, "labels")
+
+# Create haplotype plots
+sz <- sz[all_sequences_network_labels]
+plot(all_sequences_network, size = sz)
+plot(all_sequences_network, pie = pop, legend = c(-10, 10))
+plot(all_sequences_network, pie = pop, size = sz, legend = c(-30, -10))
